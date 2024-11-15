@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP Sensor Data Dashboard</title>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-firestore.js"></script>
+  <!-- Chart.js Library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f4f8;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      font-size: 2em;
+      color: #1e88e5;
+    }
+    .header p {
+      color: #666;
+    }
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1200px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      text-align: center;
+    }
+    .card h2 {
+      font-size: 1.5em;
+      margin-bottom: 10px;
+    }
+    .reading {
+      font-size: 2em;
+      font-weight: bold;
+      color: #ff6f61;
+      margin-bottom: 10px;
+    }
+    .chart-container {
+      position: relative;
+      height: 300px;
+    }
+    .severity-level {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #ffeeba;
+      color: #856404;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>ESP Sensor Data Dashboard</h1>
+    <p>Monitor your plant environment in real-time</p>
+  </div>
+
+  <div class="dashboard">
+    <div class="card">
+      <h2>Temperature</h2>
+      <div class="reading" id="tempReading">-- °C</div>
+      <div class="chart-container">
+        <canvas id="tempChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Humidity</h2>
+      <div class="reading" id="humidityReading">-- %</div>
+      <div class="chart-container">
+        <canvas id="humidityChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Soil Moisture</h2>
+      <div class="reading" id="soilReading">-- %</div>
+      <div class="chart-container">
+        <canvas id="soilChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="severity-level" id="severityLevel">
+    Plant Severity Level: --
+  </div>
+
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDJm2PhN8QPqFsdniXowHpVLA3WRFRU5mw",
+      authDomain: "esp-cloud-3ee7c.firebaseapp.com",
+      projectId: "esp-cloud-3ee7c",
+      storageBucket: "esp-cloud-3ee7c.appspot.com",
+      messagingSenderId: "1005122527639",
+      appId: "1:1005122527639:web:0b1abe36ab1a58a309e4d2",
+      measurementId: "G-0SWZC0QFF6"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Initial data arrays for each chart
+    const tempData = [];
+    const humidityData = [];
+    const soilData = [];
+    const labels = [];
+
+    // Create Chart.js instances
+    const tempChart = new Chart(document.getElementById('tempChart'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Temperature (°C)',
+          data: tempData,
+          borderColor: '#ff6f61',
+          borderWidth: 2,
+          fill: false,
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    const humidityChart = new Chart(document.getElementById('humidityChart'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Humidity (%)',
+          data: humidityData,
+          borderColor: '#42a5f5',
+          borderWidth: 2,
+          fill: false,
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    const soilChart = new Chart(document.getElementById('soilChart'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Soil Moisture (%)',
+          data: soilData,
+          borderColor: '#66bb6a',
+          borderWidth: 2,
+          fill: false,
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    // Function to update charts and readings with new data
+    function updateCharts(temp, humidity, soilMoisture) {
+      const currentTime = new Date().toLocaleTimeString();
+      labels.push(currentTime);
+      tempData.push(temp);
+      humidityData.push(humidity);
+      soilData.push(soilMoisture);
+
+      document.getElementById('tempReading').textContent = `${temp} °C`;
+      document.getElementById('humidityReading').textContent = `${humidity} %`;
+      document.getElementById('soilReading').textContent = `${soilMoisture} %`;
+
+      if (labels.length > 20) {
+        labels.shift();
+        tempData.shift();
+        humidityData.shift();
+        soilData.shift();
+      }
+
+      let severityLevel = 0;
+      if (temp >= 5 && temp <= 15) severityLevel++;
+      if (humidity > 60) severityLevel++;
+      if (soilMoisture < 60) severityLevel++;
+
+      let severityMessage = "Plant Severity Level: ";
+      if (severityLevel === 1) {
+        severityMessage += "Level 1 - One condition met for potential wheat fungus disease.";
+      } else if (severityLevel === 2) {
+        severityMessage += "Level 2 - Two conditions met for potential wheat fungus disease.";
+      } else if (severityLevel === 3) {
+        severityMessage += "Level 3 - All conditions met for high risk of wheat fungus disease.";
+      } else {
+        severityMessage += "--";
+      }
+      document.getElementById('severityLevel').textContent = severityMessage;
+
+      tempChart.update();
+      humidityChart.update();
+      soilChart.update();
+    }
+
+    // Listen for new sensor data from Firestore
+    db.collection("sensorData").orderBy("timestamp", "desc").limit(1)
+      .onSnapshot((snapshot) => {
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const temp = parseFloat(data.temperature);
+          const humidity = parseFloat(data.humidity);
+          const soilMoisture = parseFloat(data.moisture);
+          updateCharts(temp, humidity, soilMoisture);
+        });
+      });
+  </script>
+</body>
+</html>
+											
