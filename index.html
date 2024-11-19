@@ -199,7 +199,7 @@
       let severityLevel = 0;
       if (temp >= 5 && temp <= 15) severityLevel++;
       if (humidity > 60) severityLevel++;
-      if (soilMoisture < 60) severityLevel++;
+      if (soilMoisture > 60) severityLevel++;
 
       let severityMessage = "Plant Severity Level: ";
       if (severityLevel === 1) {
