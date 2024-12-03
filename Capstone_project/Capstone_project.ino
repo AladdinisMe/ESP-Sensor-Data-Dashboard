@@ -73,7 +73,7 @@ void setup() {
   Firebase.begin(&config, &auth);  // Initialize Firebase without explicit sign-up
   Firebase.reconnectWiFi(true);
 
-  // Connectio to Blynk
+  // Connection to Blynk
   Blynk.begin(BLYNK_AUTH_TOKEN, WIFI_SSID, WIFI_PASSWORD);
 
   dht.begin();
@@ -81,7 +81,7 @@ void setup() {
   pinMode(soil_moisture, INPUT);
 
 }
-// timestamp check.
+// Timestamp check.
 String getFormattedTime() {
   struct tm timeInfo;
   if (!getLocalTime(&timeInfo)) {
