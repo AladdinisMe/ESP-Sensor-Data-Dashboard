@@ -13,12 +13,15 @@
 #define soil_moisture 33
 DHT dht(32, DHT22);
 
+// Connecting Wi-Fi to My ESP.
 #define WIFI_SSID "ESP22"
 #define WIFI_PASSWORD "123456781"
-#define API_KEY "AIzaSyDJm2PhN8QPqFsdniXowHpVLA3WRFRU5mw"  // Replace with your Firebase API key
-#define PROJECT_ID "esp-cloud-3ee7c"                       // Replace with your Firebase project ID
-#define DATABASE_ID "(default)"                            // Firestore database ID, use "(default)" if only one database
-#define DATABASE_URL "https://esp-cloud-3ee7c-default-rtdb.firebaseio.com/" // Your Firebase Realtime Database URL
+
+// Private data for each person, you should replace it by your firebase's information.
+#define API_KEY "AIzaSyDJm2PhN8QPqFsdniXowHpVLA3WRFRU5mw"  
+#define PROJECT_ID "esp-cloud-3ee7c"                       
+#define DATABASE_ID "(default)"                            
+#define DATABASE_URL "https://esp-cloud-3ee7c-default-rtdb.firebaseio.com/" 
 
 FirebaseData fbdo;
 FirebaseAuth auth;
@@ -33,17 +36,16 @@ bool signupOK = false;
 #define VIRTUAL_PIN_TEMP V0
 #define VIRTUAL_PIN_HUMIDITY V1
 #define VIRTUAL_PIN_SOIL V2
-
-#define BUZZER_PIN 5 // Define the pin for the buzzer
+#define BUZZER_PIN 5 
 
 // NTP Server and time zone offset for Egypt (UTC+2)
 const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 2 * 3600;   // Egypt is UTC+2
-const int daylightOffset_sec = 3600;  // Adjust for daylight saving if applicable
+const int daylightOffset_sec = 3600;  
 
 void setup() {
   Serial.begin(115200);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD); // Wi-Fi connection check.
 
   Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -71,7 +73,7 @@ void setup() {
   Firebase.begin(&config, &auth);  // Initialize Firebase without explicit sign-up
   Firebase.reconnectWiFi(true);
 
-  // Connect to Blynk
+  // Connectio to Blynk
   Blynk.begin(BLYNK_AUTH_TOKEN, WIFI_SSID, WIFI_PASSWORD);
 
   dht.begin();
@@ -79,7 +81,7 @@ void setup() {
   pinMode(soil_moisture, INPUT);
 
 }
-
+// timestamp check.
 String getFormattedTime() {
   struct tm timeInfo;
   if (!getLocalTime(&timeInfo)) {
@@ -122,7 +124,7 @@ void loop() {
   // Non-blocking Firebase and Blynk updates
   if (millis() - lastUpdateTime >= 2000) {
     lastUpdateTime = millis();
-    // Update Blynk
+    // Update Blynk with new records.
     Blynk.virtualWrite(VIRTUAL_PIN_TEMP, temp);
     Blynk.virtualWrite(VIRTUAL_PIN_HUMIDITY, humidity);
     Blynk.virtualWrite(VIRTUAL_PIN_SOIL, percentage);
